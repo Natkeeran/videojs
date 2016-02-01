@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * Exposes global functionality for video.js fields.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\file\Entity\File;
+use Drupal\field\FieldStorageConfigInterface;
+use Drupal\field\FieldConfigInterface;
+
+/**
+ * Implements hook_theme().
+ */
+function videojs_theme() {
+  return array(
+    'videojs_player_formatter' => array(
+      'variables' => array('items' => NULL, 'player_attributes' => NULL)
+    ),
+  );
+}
