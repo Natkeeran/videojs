@@ -179,7 +179,9 @@ class VideoJsPlayerFormatter extends VideoJsPlayerFormatterBase implements Conta
         '#theme' => 'videojs',
         '#items' => array(Url::fromUri(file_create_url($video_uri))),
         '#player_attributes' => $this->getSettings(),
-        '#attached' => videojs_add()
+        '#attached' => array(
+          'library' => array('videojs/videojs'),
+        ),
       );
     }
     return $elements;

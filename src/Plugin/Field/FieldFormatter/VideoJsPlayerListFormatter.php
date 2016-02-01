@@ -55,7 +55,9 @@ class VideoJsPlayerListFormatter extends VideoJsPlayerFormatter implements Conta
       '#theme' => 'videojs',
       '#items' => $video_items,
       '#player_attributes' => $this->getSettings(),
-      '#attached' => videojs_add()
+      '#attached' => array(
+        'library' => array('videojs/videojs'),
+      ),
     );
     return $elements;
   }
