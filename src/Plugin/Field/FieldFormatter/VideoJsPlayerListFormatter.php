@@ -25,6 +25,7 @@ use Drupal\videojs\Plugin\Field\FieldFormatter\VideoJsPlayerFormatter;
  *   id = "videojs_player_list",
  *   label = @Translation("Video.js Player"),
  *   field_types = {
+ *     "file",
  *     "video"
  *   }
  * )
@@ -51,9 +52,10 @@ class VideoJsPlayerListFormatter extends VideoJsPlayerFormatter implements Conta
       $video_items[] = Url::fromUri(file_create_url($video_uri));
     }
     $elements[] = array(
-      '#theme' => 'videojs_player_formatter',
+      '#theme' => 'videojs',
       '#items' => $video_items,
       '#player_attributes' => $this->getSettings(),
+      '#attached' => videojs_add()
     );
     return $elements;
   }

@@ -176,9 +176,10 @@ class VideoJsPlayerFormatter extends VideoJsPlayerFormatterBase implements Conta
     foreach ($files as $delta => $file) {
       $video_uri = $file->getFileUri();
       $elements[$delta] = array(
-        '#theme' => 'videojs_player_formatter',
+        '#theme' => 'videojs',
         '#items' => array(Url::fromUri(file_create_url($video_uri))),
         '#player_attributes' => $this->getSettings(),
+        '#attached' => videojs_add()
       );
     }
     return $elements;

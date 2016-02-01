@@ -16,8 +16,185 @@ use Drupal\field\FieldConfigInterface;
  */
 function videojs_theme() {
   return array(
-    'videojs_player_formatter' => array(
+    'videojs' => array(
       'variables' => array('items' => NULL, 'player_attributes' => NULL)
+    ),
+  );
+}
+
+/**
+ * Return the version of Video.js installed.
+ *
+ * @param $path
+ *   The path to check for a Video.js installation. This can be a local path
+ *   like sites/all/libraries/video-js or a remote path like
+ *   http://mycdn.com/videojs. Do not add a trailing slash.
+ *   Defaults to videojs_directory when using the local file path location
+ *   or whatever location the Libraries API determines.
+ *
+ * @return
+ *   The version found or NULL if no version found.
+ */
+function videojs_get_version($path = NULL) {
+  $version = NULL;
+  $config = \Drupal::config('videojs.settings');
+
+  if (!isset($path)) {
+    $path = $config->get('videojs_directory');
+  };
+
+  // When admins specify a protocol-relative URL, add http because file_get_contents doesn't understand it.
+  if (strncmp('//', $path, 2) === 0) {
+    $path = 'http:' . $path;
+  }
+
+  // Don't use file_exists() because it doesn't work with URLs.
+  // Now admins can also refer to directories like http://mycdn.com/videojs.
+  $contents = @file_get_contents($path . '/video.js', FALSE, NULL, 0, 400);
+  if (!empty($contents)) {
+    $matches = array();
+    if (preg_match('/(?:v[ ]*|Version )([\d.]{2,})/i', $contents, $matches)) {
+      $version = $matches[1];
+    }
+  }
+
+  return $version;
+}
+
+
+/**
+ * Implements hook_libraries_info().
+ */
+function videojs_libraries_info() {
+  $libraries = array();
+
+  $libraries['video-js'] = array(
+    'name' => 'Video.js',
+    'vendor url' => 'http://videojs.com',
+    'download url' => 'http://videojs.com',
+    'version arguments' => array(
+      'file' => 'video.js',
+      'pattern' => '/(?:v[ ]*|Version )([\d.]{2,})/i',
+      'lines' => 2,
+      'cols' => 50,
+    ),
+    'versions' => array(
+      '2' => array(
+        'files' => array(
+          'js' => array('video.js' => array('group' => JS_LIBRARY)),
+          'css' => array('video-js.css'),
+        ),
+      ),
+      '3' => array(
+        'files' => array(
+          'js' => array('video.min.js' => array('group' => JS_LIBRARY)),
+          'css' => array('video-js.min.css'),
+        ),
+        'variants' => array(
+          'source' => array(
+            'files' => array(
+              'js' => array('video.js' => array('group' => JS_LIBRARY)),
+              'css' => array('video-js.css'),
+            ),
+            'minified' => array(
+              'files' => array(
+                'js' => array('video.min.js' => array('group' => JS_LIBRARY)),
+                'css' => array('video-js.min.css'),
+              ),
+            ),
+          ),
+        ),
+      ),
+      '4' => array(
+        'files' => array(
+          'js' => array('video.js' => array('group' => JS_LIBRARY)),
+          'css' => array('video-js.css'),
+        ),
+        'variants' => array(
+          'source' => array(
+            'files' => array(
+              'js' => array('video.dev.js' => array('group' => JS_LIBRARY)),
+              'css' => array('video-js.css'),
+            ),
+            'minified' => array(
+              'files' => array(
+                'js' => array('video.js' => array('group' => JS_LIBRARY)),
+                'css' => array('video-js.css'),
+              ),
+            ),
+          ),
+        ),
+      ),
+      '5' => array(
+        'files' => array(
+          'js' => array('video.js' => array('group' => JS_LIBRARY)),
+          'css' => array('video-js.css'),
+        ),
+        'variants' => array(
+          'source' => array(
+            'files' => array(
+              'js' => array('video.dev.js' => array('group' => JS_LIBRARY)),
+              'css' => array('video-js.css'),
+            ),
+            'minified' => array(
+              'files' => array(
+                'js' => array('video.js' => array('group' => JS_LIBRARY)),
+                'css' => array('video-js.css'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Add the Video.js library to the page.
+ */
+function videojs_add() {
+  $added = &drupal_static(__FUNCTION__);
+  $config = \Drupal::config('videojs.settings');
+
+  switch ($config->get('videojs_location')) {
+    case 'path':
+      $path = $config->get('videojs_directory');
+      $remote = strpos($path, '://') !== FALSE || strncmp('//', $path, 2) === 0;
+      break;
+
+    case 'libraries':
+      if (!module_exists('libraries')) {
+        return FALSE;
+      }
+      $path = libraries_get_path('video-js');
+      if ($path === FALSE) {
+        return FALSE;
+      }
+      $remote = FALSE;
+      break;
+
+    case 'cdn':
+    default:
+      $path = '//vjs.zencdn.net/5.0';
+      $remote = TRUE;
+  }
+
+  $jsdata = $path . '/video.js';
+  $jsopts = array('group' => JS_LIBRARY, 'preprocess' => !$remote, 'type' => $remote ? 'external' : 'file', 'weight' => 1);
+  $cssdata = $path . '/video-js.css';
+  $cssopts = array('preprocess' => !$remote, 'type' => $remote ? 'external' : 'file');
+  $swfdata = 'videojs.options.flash.swf = "' . file_create_url($path . '/video-js.swf') . '"';
+  $swfopts = array('group' => JS_LIBRARY, 'type' => 'inline', 'weight' => 5);
+
+  return array(
+    'js' => array(
+      $jsdata => $jsopts,
+      $swfdata => $swfopts,
+    ),
+    'css' => array(
+      $cssdata => $cssopts,
     ),
   );
 }
