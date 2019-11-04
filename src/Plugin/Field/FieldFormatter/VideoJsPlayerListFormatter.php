@@ -47,13 +47,16 @@ class VideoJsPlayerListFormatter extends VideoJsPlayerFormatter implements Conta
 
     // Collect cache tags to be added for each item in the field.
     $video_items = array();
+    $resource_mimes = array();
     foreach ($files as $delta => $file) {
       $video_uri = $file->getFileUri();
       $video_items[] = Url::fromUri(file_create_url($video_uri));
+      $resource_mimes[] = $file->getMimeType();
     }
     $elements[] = array(
       '#theme' => 'videojs',
       '#items' => $video_items,
+      '#mimes' => $resource_mimes,
       '#player_attributes' => $this->getSettings(),
       '#attached' => array(
         'library' => array('videojs/videojs'),
@@ -61,7 +64,7 @@ class VideoJsPlayerListFormatter extends VideoJsPlayerFormatter implements Conta
     );
     return $elements;
   }
-  
+
   /**
    * {@inheritdoc}
    */
